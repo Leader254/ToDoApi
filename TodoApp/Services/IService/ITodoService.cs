@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using TodoApp.Models;
+using TodoApp.Responses;
 
 namespace TodoApp.Services.IService
 {
@@ -11,7 +8,7 @@ namespace TodoApp.Services.IService
         Task<string> AddTodoAsync(Todo todo);
         Task<string> DeleteTodoAsync(Guid id);
         Task<string> UpdateTodoAsync(Todo todo);
-        Task<IEnumerable<Todo>> GetTodosAsync();
+        Task<(IEnumerable<Todo>, PagingMetaData)> GetTodosAsync(string? name, int PageNumber, int PageSize);
         Task<Todo> GetTodoByIdAsync(Guid id);
     }
 }

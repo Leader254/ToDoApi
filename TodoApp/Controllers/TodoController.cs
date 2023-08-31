@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Models;
@@ -15,6 +16,7 @@ namespace TodoApp.Controllers
     {
         private readonly IMapper _mapper;
         private readonly ITodoService _todoService;
+        const int maxPageSize = 5;
 
         public TodoController(IMapper mapper, ITodoService todoService)
         {
@@ -40,9 +42,14 @@ namespace TodoApp.Controllers
 
         [HttpGet]
         // get all todos - use response
-        public async Task<ActionResult<IEnumerable<TodoResponse>>> GetAllTodos()
+        public async Task<ActionResult<IEnumerable<TodoResponse>>> GetAllTodos(string? name, int PageNumber = 1, int PageSize = 1)
         {
-            var todos = await _todoService.GetTodosAsync();
+            if (PageSize > maxPageSize)
+            {
+                PageSize = maxPageSize;
+            }
+            var (todos, meta) = await _todoService.GetTodosAsync(name, PageNumber, PageSize);
+            Response.Headers.Add("PagingMetaData", JsonSerializer.Serialize(meta));
             var response = _mapper.Map<IEnumerable<TodoResponse>>(todos);
             return Ok(response);
         }

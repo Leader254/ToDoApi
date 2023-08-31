@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using TodoApp.Context;
 using TodoApp.Models;
+using TodoApp.Responses;
 using TodoApp.Services.IService;
 
 namespace TodoApp.Services
@@ -37,10 +39,20 @@ namespace TodoApp.Services
             return result;
         }
 
-        public async Task<IEnumerable<Todo>> GetTodosAsync()
+        public async Task<(IEnumerable<Todo>, PagingMetaData)> GetTodosAsync(string? name, int PageNumber, int PageSize)
         {
-            return await context.Todos.ToListAsync();
-
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrEmpty(name))
+            {
+                var Count = await context.Todos.CountAsync();
+                var Meta = new PagingMetaData(PageNumber, PageSize, Count);
+                var response = await context.Todos.Skip(PageSize * (PageNumber - 1)).Take(PageSize).ToListAsync();
+                return (response, Meta);
+            }
+            var TotalCount = await context.Todos.CountAsync();
+            var pageMeta = new PagingMetaData(PageNumber, PageSize, TotalCount);
+            // searching and filtering
+            var res = await context.Todos.Where(c => c.Name.ToLower().Contains(name.ToLower())).Skip(PageSize * (PageNumber - 1)).Take(PageSize).ToListAsync();
+            return (res, pageMeta);
         }
 
         public async Task<string> UpdateTodoAsync(Todo todo)
